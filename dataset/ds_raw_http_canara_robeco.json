@@ -1,0 +1,23 @@
+{
+	"name": "ds_raw_http_canara_robeco",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_connection_http_raw_data",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": "finance/download/0P0001FKEE.BO?period1=1689994450&period2=1721616850&interval=1d&events=history&includeAdjustedClose=true"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

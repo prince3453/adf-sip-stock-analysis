@@ -1,0 +1,9 @@
+{
+	"name": "adf-sip-stock-analysis",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "31f412fb-0f5b-4c1a-8eac-0fcc8847cce5",
+		"tenantId": "5569f185-d22f-4e13-9850-ce5b1abcd2e8"
+	}
+}

@@ -1,0 +1,49 @@
+{
+	"name": "ds_processed_sqlize_db",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_connection_sqldatabase",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Date",
+				"type": "date"
+			},
+			{
+				"name": "niftyClose",
+				"type": "decimal",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "CanaraRobecoClose",
+				"type": "decimal",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "ShiftedMarketnegative",
+				"type": "varchar"
+			},
+			{
+				"name": "units",
+				"type": "decimal",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "InvestedAmount",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "processed_market_trends"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

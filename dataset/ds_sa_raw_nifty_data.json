@@ -1,0 +1,25 @@
+{
+	"name": "ds_sa_raw_nifty_data",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_connection_sa_raw_data",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "nifty.csv",
+				"folderPath": "nifty",
+				"container": "raw"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,180 @@
+{
+	"name": "df_market_trend",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_sa_raw_nifty_data",
+						"type": "DatasetReference"
+					},
+					"name": "SourceNiftyData"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_sa_raw_canara_robeco",
+						"type": "DatasetReference"
+					},
+					"name": "SourceCanaraRobeco"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_processed_dl_markettrenddata",
+						"type": "DatasetReference"
+					},
+					"name": "sinkdl",
+					"rejectedDataLinkedService": {
+						"referenceName": "ls_connection_sadl_processed_data",
+						"type": "LinkedServiceReference"
+					}
+				}
+			],
+			"transformations": [
+				{
+					"name": "SelectOnlyRequiredFields"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "SelectOnlyRequiredFields1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "JoinwithCanararobeco"
+				},
+				{
+					"name": "SelectOnlyRequiredColumn"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "surrogateKey1"
+				},
+				{
+					"name": "join1"
+				},
+				{
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "SELECTRequiredFields"
+				},
+				{
+					"name": "window1"
+				},
+				{
+					"name": "derivedColumn4"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Date as date,",
+				"          Open as double,",
+				"          High as double,",
+				"          Low as double,",
+				"          Close as double,",
+				"          {Adj Close} as double,",
+				"          Volume as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SourceNiftyData",
+				"source(output(",
+				"          Date as date,",
+				"          Open as double,",
+				"          High as double,",
+				"          Low as double,",
+				"          Close as double,",
+				"          {Adj Close} as double,",
+				"          Volume as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SourceCanaraRobeco",
+				"SourceNiftyData select(mapColumn(",
+				"          Date,",
+				"          nifty_Close = Close",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectOnlyRequiredFields",
+				"SelectOnlyRequiredFields derive(nifty_Close = round(nifty_Close, 2)) ~> derivedColumn1",
+				"SourceCanaraRobeco select(mapColumn(",
+				"          Date,",
+				"          CanaraRobeco_Close = Close",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectOnlyRequiredFields1",
+				"SelectOnlyRequiredFields1 derive(CanaraRobeco_Close = round(CanaraRobeco_Close,2)) ~> derivedColumn2",
+				"derivedColumn1, derivedColumn2 join(SelectOnlyRequiredFields@Date == SelectOnlyRequiredFields1@Date,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinwithCanararobeco",
+				"JoinwithCanararobeco select(mapColumn(",
+				"          Date = SelectOnlyRequiredFields@Date,",
+				"          nifty_Close,",
+				"          CanaraRobeco_Close",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectOnlyRequiredColumn",
+				"surrogateKey1 select(mapColumn(",
+				"          Date = SelectOnlyRequiredColumn@Date,",
+				"          nifty_Close,",
+				"          CanaraRobeco_Close,",
+				"          date_number = surrogateKey1@date",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"SelectOnlyRequiredColumn keyGenerate(output(date as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> surrogateKey1",
+				"select1, surrogateKey1 join(date_number +1 == surrogateKey1@date,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"join1 derive(Date = select1@Date,",
+				"          nifty_Close = select1@nifty_Close,",
+				"          CanaraRobeco_Close = select1@CanaraRobeco_Close,",
+				"          Market_negative = iif(SelectOnlyRequiredColumn@nifty_Close < select1@nifty_Close, \"Yes\", \"No\")) ~> derivedColumn3",
+				"derivedColumn3 select(mapColumn(",
+				"          Date = derivedColumn3@Date,",
+				"          niftyClose = nifty_Close,",
+				"          CanaraRobecoClose = CanaraRobeco_Close,",
+				"          Marketnegative = Market_negative",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SELECTRequiredFields",
+				"SELECTRequiredFields window(asc(Date, true),",
+				"     Marketnegative = lag(Marketnegative, 1, null())) ~> window1",
+				"window1 derive(units = iif(Marketnegative=='Yes',round((2000/CanaraRobecoClose),2),toDouble(0)),",
+				"          Marketnegative = iif(isNull(Marketnegative), 'No', Marketnegative),",
+				"          InvestedAmount = iif(Marketnegative=='Yes',2000,0)) ~> derivedColumn4",
+				"derivedColumn4 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['final_market_trend.csv'],",
+				"     umask: 0777,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          Date,",
+				"          niftyClose,",
+				"          CanaraRobecoClose,",
+				"          Marketnegative,",
+				"          units,",
+				"          InvestedAmount",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> sinkdl"
+			]
+		}
+	}
+}
